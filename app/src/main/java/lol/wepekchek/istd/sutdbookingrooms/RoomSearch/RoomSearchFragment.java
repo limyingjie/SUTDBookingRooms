@@ -7,32 +7,30 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.Spinner;
+import android.widget.Toast;
 
 import lol.wepekchek.istd.sutdbookingrooms.R;
 
 import com.google.android.gms.plus.PlusOneButton;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 
-/**
- * A fragment with a Google +1 button.
- * Activities that contain this fragment must implement the
- * {@link RoomSearchFragment.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link RoomSearchFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import java.util.HashMap;
+
+
 public class RoomSearchFragment extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-    // The request code must be 0 or greater.
-    private static final int PLUS_ONE_REQUEST_CODE = 0;
-    // The URL to +1.  Must be a valid URL.
-    private final String PLUS_ONE_URL = "http://developer.android.com";
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-    private PlusOneButton mPlusOneButton;
+    private DatabaseReference mDatabase;
+    public HashMap<String,String> data;
+    private Spinner daySpinner,monthSpinner,yearSpinner,hourSpinner,durationSpinner;
+    private Button button;
 
     private OnFragmentInteractionListener mListener;
 
@@ -40,31 +38,12 @@ public class RoomSearchFragment extends Fragment {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment RoomSearchFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static RoomSearchFragment newInstance(String param1, String param2) {
-        RoomSearchFragment fragment = new RoomSearchFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
+        mDatabase = FirebaseDatabase.getInstance().getReference();
     }
 
     @Override
@@ -72,9 +51,56 @@ public class RoomSearchFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_room_search, container, false);
+        daySpinner = (Spinner) view.findViewById(R.id.spinner);
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this.getActivity(),
+                R.array.days_array, android.R.layout.simple_spinner_item);
+        // Specify the layout to use when the list of choices appears
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // Apply the adapter to the spinner
+        daySpinner.setAdapter(adapter);
+        //daySpinner.setOnItemSelectedListener(this);
 
-        //Find the +1 button
-        mPlusOneButton = (PlusOneButton) view.findViewById(R.id.plus_one_button);
+        monthSpinner = (Spinner) view.findViewById(R.id.spinner2);
+        ArrayAdapter<CharSequence> adapter2 = ArrayAdapter.createFromResource(this.getActivity(),
+                R.array.months_array, android.R.layout.simple_spinner_item);
+        adapter2.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        monthSpinner.setAdapter(adapter2);
+       // monthSpinner.setOnItemSelectedListener(this);
+
+        yearSpinner = (Spinner) view.findViewById(R.id.spinner3);
+        ArrayAdapter<CharSequence> adapter3 = ArrayAdapter.createFromResource(this.getActivity(),
+                R.array.years_array, android.R.layout.simple_spinner_item);
+        adapter3.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        yearSpinner.setAdapter(adapter3);
+        //yearSpinner.setOnItemSelectedListener(this);
+
+        hourSpinner = (Spinner) view.findViewById(R.id.spinner4);
+        ArrayAdapter<CharSequence> adapter4 = ArrayAdapter.createFromResource(this.getActivity(),
+                R.array.hours_array, android.R.layout.simple_spinner_item);
+        adapter4.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        hourSpinner.setAdapter(adapter4);
+        //hourSpinner.setOnItemSelectedListener(this);
+
+        durationSpinner = (Spinner) view.findViewById(R.id.spinner5);
+        ArrayAdapter<CharSequence> adapter5 = ArrayAdapter.createFromResource(this.getActivity(),
+                R.array.duration_array, android.R.layout.simple_spinner_item);
+        adapter5.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        durationSpinner.setAdapter(adapter5);
+
+
+        mDatabase = FirebaseDatabase.getInstance().getReference();
+
+        button=(Button) view.findViewById(R.id.button);
+        button.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                if (v==v.findViewById(R.id.button))viewData(v);
+
+            }
+        });
 
         return view;
     }
@@ -84,7 +110,7 @@ public class RoomSearchFragment extends Fragment {
         super.onResume();
 
         // Refresh the state of the +1 button each time the activity receives focus.
-        mPlusOneButton.initialize(PLUS_ONE_URL, PLUS_ONE_REQUEST_CODE);
+        //mPlusOneButton.initialize(PLUS_ONE_URL, PLUS_ONE_REQUEST_CODE);
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -94,22 +120,7 @@ public class RoomSearchFragment extends Fragment {
         }
     }
 
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        if (context instanceof OnFragmentInteractionListener) {
-            mListener = (OnFragmentInteractionListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement OnFragmentInteractionListener");
-        }
-    }
 
-    @Override
-    public void onDetach() {
-        super.onDetach();
-        mListener = null;
-    }
 
     /**
      * This interface must be implemented by activities that contain this
@@ -125,5 +136,39 @@ public class RoomSearchFragment extends Fragment {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
     }
+
+
+    public void viewData(View view) {
+        final String dateAndTime = daySpinner.getSelectedItem().toString()+
+                monthSpinner.getSelectedItem().toString()+
+                yearSpinner.getSelectedItem().toString()+
+                hourSpinner.getSelectedItem().toString();
+        Toast.makeText(getActivity(), dateAndTime, Toast.LENGTH_SHORT).show();
+        Query myQuery = mDatabase.child("Rooms").child("55L2");
+        try {
+            myQuery.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    try {
+                        data = (HashMap) dataSnapshot.getValue();
+                        if(dataSnapshot.hasChild(dateAndTime))Toast.makeText(getActivity(), "taken", Toast.LENGTH_SHORT).show();
+                        else{Toast.makeText(getActivity(), "55lvl2 available on chosen timing for 1 hr", Toast.LENGTH_SHORT).show();}
+                    } catch (Exception ex) {
+                        Toast.makeText(getActivity(), "Error", Toast.LENGTH_SHORT).show();
+
+                    }
+
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                }
+            });
+        } catch (Exception ex) {
+            Toast.makeText(getActivity(), "Exception", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
 
 }
