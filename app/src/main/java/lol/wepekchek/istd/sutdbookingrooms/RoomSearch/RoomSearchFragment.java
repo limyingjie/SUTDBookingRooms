@@ -15,7 +15,6 @@ import android.widget.Toast;
 
 import lol.wepekchek.istd.sutdbookingrooms.R;
 
-import com.google.android.gms.plus.PlusOneButton;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -23,6 +22,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.Arrays;
 import java.util.HashMap;
 
 
@@ -31,6 +31,7 @@ public class RoomSearchFragment extends Fragment {
     public HashMap<String,String> data;
     private Spinner daySpinner,monthSpinner,yearSpinner,hourSpinner,durationSpinner;
     private Button button;
+    private String[] times;
 
     private OnFragmentInteractionListener mListener;
 
@@ -51,6 +52,9 @@ public class RoomSearchFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_room_search, container, false);
+
+        //setupSpinner(view,daySpinner,R.array.days_array,R.id.spinner);
+
         daySpinner = (Spinner) view.findViewById(R.id.spinner);
         // Create an ArrayAdapter using the string array and a default spinner layout
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this.getActivity(),
@@ -139,23 +143,51 @@ public class RoomSearchFragment extends Fragment {
 
 
     public void viewData(View view) {
+        String[] hours=new String[Integer.parseInt(durationSpinner.getSelectedItem().toString())];
+        int hour=Integer.parseInt(hourSpinner.getSelectedItem().toString());
+        for (int i=1;i<=Integer.parseInt(durationSpinner.getSelectedItem().toString());i++){
+            if (hour==0)hours[i-1]="0000";
+            else if (hour<=900)hours[i-1]="0"+String.valueOf(hour);
+            else hours[i-1]=String.valueOf(hour);
+            hour+=100;
+        }
+        //Toast.makeText(getActivity(), Arrays.toString(hours), Toast.LENGTH_SHORT).show();
         final String dateAndTime = daySpinner.getSelectedItem().toString()+
                 monthSpinner.getSelectedItem().toString()+
                 yearSpinner.getSelectedItem().toString()+
                 hourSpinner.getSelectedItem().toString();
-        Toast.makeText(getActivity(), dateAndTime, Toast.LENGTH_SHORT).show();
-        Query myQuery = mDatabase.child("Rooms").child("55L2");
+        times =new String[hours.length];
+        for (int i=0;i<hours.length;i++){
+            times[i]= daySpinner.getSelectedItem().toString()+
+                    monthSpinner.getSelectedItem().toString()+
+                    yearSpinner.getSelectedItem().toString()+ hours[i];
+        }
+        Toast.makeText(getActivity(), Arrays.toString(times), Toast.LENGTH_SHORT).show();
+        Query myQuery = mDatabase.child("Rooms");
         try {
             myQuery.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     try {
                         data = (HashMap) dataSnapshot.getValue();
-                        if(dataSnapshot.hasChild(dateAndTime))Toast.makeText(getActivity(), "taken", Toast.LENGTH_SHORT).show();
-                        else{Toast.makeText(getActivity(), "55lvl2 available on chosen timing for 1 hr", Toast.LENGTH_SHORT).show();}
+                        String[] rooms={"55L2","55L9"};
+                        String availableRooms="";
+                        boolean isTaken=false;
+                        for (String room:rooms){
+                            isTaken=false;
+                            for (String time:times){
+                                if(dataSnapshot.child(room).hasChild(time)){
+                                    isTaken=true;
+                                    break;
+                                }
+                            }
+                            if(!isTaken)availableRooms+=room+" ";
+                        }
+//                        if(dataSnapshot.hasChild(dateAndTime))Toast.makeText(getActivity(), "taken", Toast.LENGTH_SHORT).show();
+//                        else{Toast.makeText(getActivity(), "55lvl2 available on chosen timing for 1 hr", Toast.LENGTH_SHORT).show();}
+                        Toast.makeText(getActivity(), "Available rooms: "+availableRooms, Toast.LENGTH_SHORT).show();
                     } catch (Exception ex) {
                         Toast.makeText(getActivity(), "Error", Toast.LENGTH_SHORT).show();
-
                     }
 
                 }
@@ -168,7 +200,6 @@ public class RoomSearchFragment extends Fragment {
             Toast.makeText(getActivity(), "Exception", Toast.LENGTH_SHORT).show();
         }
     }
-
 
 
 }
