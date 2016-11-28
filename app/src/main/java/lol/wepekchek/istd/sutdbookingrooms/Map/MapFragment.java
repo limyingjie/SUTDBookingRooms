@@ -1,61 +1,57 @@
 package lol.wepekchek.istd.sutdbookingrooms.Map;
 
-import android.content.Context;
-import android.net.Uri;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import lol.wepekchek.istd.sutdbookingrooms.R;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnCameraIdleListener;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.GroundOverlay;
 import com.google.android.gms.maps.model.GroundOverlayOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.util.ArrayList;
 
-public class MapFragment extends Fragment implements OnCameraIdleListener, OnMapReadyCallback,
+public class MapFragment extends Fragment implements
+        OnCameraIdleListener,
+        OnMapReadyCallback,
         GoogleMap.OnMapClickListener {
     GoogleMap mMap;
-    EditText txtMapSearch;
-    GroundOverlay mGroundOverlay;
+    TextView txtMapSearch;
+    GroundOverlay[] groundOverlays;
+    int currentLevel;
+    ArrayList<Circle> circles;
+    ArrayList<Marker> markers;
 
     public MapFragment() {}
 
-    public static MapFragment newInstance(String param1, String param2) {
-        MapFragment fragment = new MapFragment();
-        Bundle args = new Bundle();
-//        args.putString(ARG_PARAM1, param1);
-//        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-//        if (getArguments() != null) {
-//            mParam1 = getArguments().getString(ARG_PARAM1);
-//            mParam2 = getArguments().getString(ARG_PARAM2);
-//        }
-    }
-
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_map, container, false);
 
-        txtMapSearch = (EditText) view.findViewById(R.id.txtMapSearch);
+        txtMapSearch = (TextView) view.findViewById(R.id.txtMapSearch);
+        groundOverlays = new GroundOverlay[8];
+        currentLevel = 1;
+        circles = new ArrayList<Circle>();
+        markers = new ArrayList<Marker>();
 
         // Need to use getChildFragmentManager() if it is a nested fragment
         SupportMapFragment mapFragment =
@@ -68,12 +64,24 @@ public class MapFragment extends Fragment implements OnCameraIdleListener, OnMap
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        googleMap.setOnCameraIdleListener(this);
-        googleMap.setOnMapClickListener(this);
-        mGroundOverlay = googleMap.addGroundOverlay(new GroundOverlayOptions()
-                .image(BitmapDescriptorFactory.fromResource(R.drawable.newark_prudential_sunny))
-                .anchor(0, 1)
-                .position(new LatLng(37.421976, -122.084065), 8600f, 6500f));
+        mMap.setMapType(GoogleMap.MAP_TYPE_NONE);
+        mMap.setMinZoomPreference(12);
+        mMap.setMaxZoomPreference(14);
+        mMap.setLatLngBoundsForCameraTarget(new LatLngBounds(
+                new LatLng(-53.96, -5.98), new LatLng(-53.94, -5.92)));
+        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(new CameraPosition.Builder()
+                .target(new LatLng(-53.95, -5.95)).zoom(12).bearing(0).tilt(0).build()));
+        mMap.setOnCameraIdleListener(this);
+        mMap.setOnMapClickListener(this);
+        mMap.setOnCircleClickListener(new GoogleMap.OnCircleClickListener() {
+            @Override
+            public void onCircleClick(Circle circle) {
+                circleClicked(circle);
+            }
+        });
+
+        addOverlays();
+        addCircles(57, 1);
     }
 
     @Override
@@ -83,6 +91,75 @@ public class MapFragment extends Fragment implements OnCameraIdleListener, OnMap
 
     @Override
     public void onMapClick(LatLng latLng) {
-        Toast.makeText(getActivity(), latLng.latitude+", "+latLng.longitude, Toast.LENGTH_SHORT).show();
+        txtMapSearch.setText(txtMapSearch.getText().toString()+"\n"+latLng.latitude+", "+latLng.longitude);
+    }
+
+    private void addOverlays() {
+        groundOverlays[1] = mMap.addGroundOverlay(new GroundOverlayOptions()
+                .image(BitmapDescriptorFactory.fromResource(R.drawable.lvl1))
+                .anchor(0.5f, 0.5f)
+                .position(new LatLng(-53.95, -5.95), 10270f, 6370f)
+                .visible(true));
+        groundOverlays[2] = mMap.addGroundOverlay(new GroundOverlayOptions()
+                .image(BitmapDescriptorFactory.fromResource(R.drawable.lvl2))
+                .anchor(0.5f, 0.5f)
+                .position(new LatLng(-53.95, -5.95), 10270f, 6370f)
+                .visible(false));
+        groundOverlays[3] = mMap.addGroundOverlay(new GroundOverlayOptions()
+                .image(BitmapDescriptorFactory.fromResource(R.drawable.lvl3))
+                .anchor(0.5f, 0.5f)
+                .position(new LatLng(-53.95, -5.95), 10270f, 6370f)
+                .visible(false));
+        groundOverlays[4] = mMap.addGroundOverlay(new GroundOverlayOptions()
+                .image(BitmapDescriptorFactory.fromResource(R.drawable.lvl4))
+                .anchor(0.5f, 0.5f)
+                .position(new LatLng(-53.95, -5.95), 10270f, 6370f)
+                .visible(false));
+        groundOverlays[5] = mMap.addGroundOverlay(new GroundOverlayOptions()
+                .image(BitmapDescriptorFactory.fromResource(R.drawable.lvl5))
+                .anchor(0.5f, 0.5f)
+                .position(new LatLng(-53.95, -5.95), 10270f, 6370f)
+                .visible(false));
+        groundOverlays[6] = mMap.addGroundOverlay(new GroundOverlayOptions()
+                .image(BitmapDescriptorFactory.fromResource(R.drawable.lvl6))
+                .anchor(0.5f, 0.5f)
+                .position(new LatLng(-53.95, -5.95), 10270f, 6370f)
+                .visible(false));
+        groundOverlays[7] = mMap.addGroundOverlay(new GroundOverlayOptions()
+                .image(BitmapDescriptorFactory.fromResource(R.drawable.lvl7))
+                .anchor(0.5f, 0.5f)
+                .position(new LatLng(-53.95, -5.95), 10270f, 6370f)
+                .visible(false));
+    }
+
+    private void circleClicked(Circle circle) {
+        if (circle.getCenter().equals(new LatLng(-53.95, -5.95)))
+            Toast.makeText(getContext(), circle.getCenter().toString(), Toast.LENGTH_SHORT).show();
+    }
+
+    private void addCircles(int building, int level) {
+        circles.add(mMap.addCircle(new CircleOptions()
+                .center(new LatLng(-53.95, -5.95))
+                .radius(50)
+                .strokeWidth(0)
+                .fillColor(Color.GREEN)
+                .clickable(true)
+                .zIndex(1)));
+        markers.add(mMap.addMarker(new MarkerOptions()
+                .alpha(0)
+                .position(new LatLng(-53.95, -5.95))
+                .infoWindowAnchor(0.5f, 1)
+                .title("Room")
+                .snippet("Yeah")
+                .zIndex(1)));
+    }
+
+    private void clearCircles() {
+        for (int i=0; i< circles.size(); i++) {
+            circles.get(i).remove();
+            markers.get(i).remove();
+        }
+        circles.clear();
+        markers.clear();
     }
 }

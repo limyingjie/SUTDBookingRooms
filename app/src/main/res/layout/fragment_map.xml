@@ -6,28 +6,31 @@
     android:layout_height="match_parent"
     tools:context="Map.MapFragment">
 
-        <EditText
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="textPersonName"
-            android:ems="10"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentStart="true"
-            android:id="@+id/txtMapSearch" />
+    <TextView
+        android:layout_width="match_parent"
+        android:ems="10"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:id="@+id/txtMapSearch"
+        android:ellipsize="none"
+        android:scrollHorizontally="false"
+        android:layout_height="wrap_content"
+        android:maxLines="100"
+        android:maxEms="10" />
 
-        <fragment
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:id="@+id/sutdMap"
-            class="com.google.android.gms.maps.SupportMapFragment"
-            android:layout_below="@+id/txtMapSearch"
-            map:cameraMinZoomPreference="10.0"
-            map:cameraMaxZoomPreference="14.0"
-            map:latLngBoundsSouthWestLatitude="37.4"
-            map:latLngBoundsSouthWestLongitude="-122.1"
-            map:latLngBoundsNorthEastLatitude="37.45"
-            map:latLngBoundsNorthEastLongitude="-122.05"
-            map:cameraTargetLat="37.421976"
-            map:cameraTargetLng="-122.084065"
-            map:cameraZoom="12" />
+    <fragment
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/sutdMap"
+        class="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_below="@+id/txtMapSearch" />
+    <!--map:cameraMinZoomPreference="12"-->
+    <!--map:cameraMaxZoomPreference="14"-->
+    <!--map:latLngBoundsSouthWestLatitude="-53.96"-->
+    <!--map:latLngBoundsSouthWestLongitude="-5.97"-->
+    <!--map:latLngBoundsNorthEastLatitude="-53.94"-->
+    <!--map:latLngBoundsNorthEastLongitude="-5.93"-->
+    <!--map:cameraTargetLat="-53.95"-->
+    <!--map:cameraTargetLng="-5.95"-->
+    <!--map:cameraZoom="12"-->
 </RelativeLayout>
